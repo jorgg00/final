@@ -72,7 +72,7 @@ const attachSubtitleReader = () => {
         audioSRTReader.destroy();
     }
 
-    audioSRTReader = new SRTLector(song, '/subtitles.srt', {
+    audioSRTReader = new SRTLector(song, '../audio/crush.srt', {
         onSubtitleChange: (obj) => {
             if (song && song.isPlaying() && obj) {
                 currentsubtitle = String(obj.subtitle).toUpperCase();
