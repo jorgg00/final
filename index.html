@@ -4,7 +4,8 @@
       
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Text </title>
+    <title>Final </title>
+    <link rel="stylesheet" href="./css/audio-controls.css">
     <style>
         body{
             padding:0;
@@ -14,8 +15,31 @@
     </style>
 </head>
 <body>
+    <section class="audio-ui" aria-label="Controles de audio">
+        <p class="audio-ui__eyebrow">Playlist</p>
+        <h1 class="audio-ui__title" id="trackTitle" aria-live="polite">
+            Selecciona una pista
+        </h1>
+        <div class="audio-ui__controls">
+            <button class="audio-ui__btn" data-action="prev" aria-label="Anterior">
+                &#9664;
+            </button>
+            <button class="audio-ui__btn audio-ui__btn--play" data-action="play" aria-label="Reproducir">
+                Play
+            </button>
+            <button class="audio-ui__btn audio-ui__btn--pause" data-action="pause" aria-label="Pausar">
+                Pause
+            </button>
+            <button class="audio-ui__btn" data-action="next" aria-label="Siguiente">
+                &#9654;
+            </button>
+        </div>
+        <p class="audio-ui__status" id="trackStatus" aria-live="polite"></p>
+    </section>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/addons/p5.sound.min.js"></script>
     <script src= "./js/audio-text.js" type="module"></script>
+    <script src="./js/audio-controls.js" type="module"></script>
 </body>
 </html>

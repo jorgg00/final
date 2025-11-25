@@ -1,55 +1,181 @@
-import SRTLector from './srt-reader.js'
+import SRTLector from './srt-reader.js';
 
-let font, fontSize;
-let song, fft, smoothing = 0.9, binSize = 128;
-let amplitude = 0;
-let audioSRTReader;
-let currentsubtitle = "";
-let center= {x:1, y:1}
+const DEFAULT_TRACK = new URL('../audio/crush.mp3', import.meta.url).href;
+const BRIDGE_EVENT_ENDED = 'visualizer:track-ended';
+
+let font;
+let fontSize;
+let song;
+let fft;
+const smoothing = 0.9;
+const binSize = 128;
+let amplitude = null;
+let audioSRTReader = null;
+let currentsubtitle = '';
+let center = { x: 1, y: 1 };
 let diameter = 100;
 let vol = 0;
-var t;
+let currentTrackSrc = DEFAULT_TRACK;
+
+const bridgeCommandQueue = [];
+const audioVisualizerBridge = window.audioVisualizerBridge || {};
+audioVisualizerBridge.ready = audioVisualizerBridge.ready || false;
+
+const enqueueBridgeCommand = (type, payload = {}) =>
+    new Promise((resolve, reject) => {
+        const command = { type, payload, resolve, reject };
+        if (audioVisualizerBridge.ready) {
+            processBridgeCommand(command);
+        } else {
+            bridgeCommandQueue.push(command);
+        }
+    });
+
+const processBridgeCommand = (command) => {
+    Promise.resolve()
+        .then(() => handleBridgeCommand(command))
+        .then(command.resolve)
+        .catch(command.reject);
+};
+
+audioVisualizerBridge.setTrack = (payload) => enqueueBridgeCommand('setTrack', payload);
+audioVisualizerBridge.play = () => enqueueBridgeCommand('play');
+audioVisualizerBridge.pause = () => enqueueBridgeCommand('pause');
+window.audioVisualizerBridge = audioVisualizerBridge;
+
+const normalizeTrackSrc = (src) => {
+    if (!src) {
+        throw new Error('Ruta de pista inválida');
+    }
+    return new URL(src, window.location.href).href;
+};
+
+const loadSoundAsync = (src) =>
+    new Promise((resolve, reject) => {
+        loadSound(
+            src,
+            (loaded) => resolve(loaded),
+            (err) => reject(new Error(`No se pudo cargar el audio (${err?.message || 'desconocido'})`))
+        );
+    });
+
+const dispatchVisualizerEvent = (name, detail = {}) => {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+};
+
+const attachSubtitleReader = () => {
+    if (!song) {
+        return;
+    }
+
+    if (audioSRTReader) {
+        audioSRTReader.destroy();
+    }
+
+    audioSRTReader = new SRTLector(song, '/subtitles.srt', {
+        onSubtitleChange: (obj) => {
+            if (song && song.isPlaying() && obj) {
+                currentsubtitle = String(obj.subtitle).toUpperCase();
+            } else if (!obj) {
+                currentsubtitle = '';
+            }
+        }
+    });
+};
+
+const bindPlaybackEvents = () => {
+    if (!song) {
+        return;
+    }
+
+    song.onended(() => {
+        dispatchVisualizerEvent(BRIDGE_EVENT_ENDED, { src: currentTrackSrc });
+    });
+};
+
+const swapSong = (nextSong, nextSrc) => {
+    if (song) {
+        song.stop();
+        song.disconnect();
+    }
+
+    song = nextSong;
+    currentTrackSrc = nextSrc;
+
+    if (fft) {
+        fft.setInput(song);
+    }
+    if (amplitude) {
+        amplitude.setInput(song);
+    }
+
+    bindPlaybackEvents();
+    attachSubtitleReader();
+    currentsubtitle = '';
+};
+
+const setTrackSource = async (rawSrc) => {
+    const normalizedSrc = normalizeTrackSrc(rawSrc);
+    if (normalizedSrc === currentTrackSrc && song) {
+        return song;
+    }
+    const nextSong = await loadSoundAsync(normalizedSrc);
+    swapSong(nextSong, normalizedSrc);
+    return song;
+};
+
+const handleBridgeCommand = async ({ type, payload }) => {
+    switch (type) {
+        case 'setTrack':
+            await setTrackSource(payload?.src);
+            break;
+        case 'play':
+            if (!song) {
+                throw new Error('No hay pista preparada');
+            }
+            song.play();
+            break;
+        case 'pause':
+            if (song) {
+                song.pause();
+            }
+            break;
+        default:
+            break;
+    }
+};
+
+const flushBridgeQueue = () => {
+    while (bridgeCommandQueue.length) {
+        processBridgeCommand(bridgeCommandQueue.shift());
+    }
+};
 
 window.preload = () => {
-
-    font = loadFont("../css/rubik.ttf");
-    song = loadSound("../audio/crush.mp3")
-    console.log(song);
-    audioSRTReader = new SRTLector(song, '/subtitles.srt', {
-        onSubtitleChange: (obj, currentTime) => {
-            // Solo actualizar si el audio está reproduciéndose
-            if (song.isPlaying() && obj) {
-                currentsubtitle = String(obj.subtitle).toUpperCase()
-
-            }
-            
-        }
-    })
-}
+    font = loadFont('../css/rubik.ttf');
+    song = loadSound(DEFAULT_TRACK);
+};
 
 window.setup = () => {
+    createCanvas(windowWidth, windowHeight, WEBGL);
 
-    let canvas = createCanvas(windowWidth, windowHeight,WEBGL);
-
-    diameter= max(width,height);
+    diameter = max(width, height);
 
     textFont(font);
     textAlign(CENTER, CENTER);
     windowResized();
     amplitude = new p5.Amplitude();
-    canvas.mousePressed(() => {
-        if (song.isPlaying()) {
-            song.pause();
-        } else {
-            
-            song.play();
-        }
-    });
+    amplitude.setInput(song);
 
     fft = new p5.FFT(smoothing, binSize);
     fft.setInput(song);
 
-}
+    bindPlaybackEvents();
+    attachSubtitleReader();
+
+    audioVisualizerBridge.ready = true;
+    flushBridgeQueue();
+};
 
 window.windowResized = () => {
 
