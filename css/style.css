@@ -1,0 +1,50 @@
+body{
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+} 
+
+a{
+    color: inherit;
+}
+
+h1{
+    font-family: "Bitcount Grid Single", system-ui;
+    font-variation-settings: "wdth" 200;
+    font-size: 17vw;
+    text-align: center;
+}
+
+#variable-chars h1{
+    font-family: "Geologica", sans-serif;
+}
+
+h1 span {
+    font-weight: 300;
+    font-variation-settings: 'slnt' -5;
+}
+
+h1 span:nth-child(1){
+    font-weight: 100;
+    font-variation-settings: 'slnt' -11;
+}
+
+h1 span:nth-child(2){
+    font-weight: 200;
+    font-variation-settings: 'slnt' -8;
+}
+
+h1 span:nth-child(3){
+    font-weight: 600;
+    font-variation-settings: 'slnt' -10;
+}
+
+h1 span:nth-child(4){
+    font-weight: 900;
+    font-variation-settings: 'slnt' 0;
+}
+
+h1 span:nth-child(5){
+    font-weight: 200;
+    font-variation-settings: 'slnt' -12;
+}
