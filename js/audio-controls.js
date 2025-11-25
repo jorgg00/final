@@ -1,13 +1,18 @@
-const makeTrack = (title, fileName) => ({
-    title,
-    src: new URL(`../audio/${fileName}`, import.meta.url).href
-});
+const makeTrack = (title, baseName) => {
+    const audioPath = `../audio/${baseName}.mp3`;
+    const subtitlePath = `../audio/${baseName}.srt`;
+    return {
+        title,
+        src: new URL(audioPath, import.meta.url).href,
+        subtitle: new URL(subtitlePath, import.meta.url).href
+    };
+};
 
 const tracks = [
-    makeTrack("Crush", "crush.mp3"),
-    makeTrack("Girlboss", "girlboss.mp3"),
-    makeTrack("Sushi", "sushi.mp3"),
-    makeTrack("Want", "want.mp3")
+    makeTrack("Crush", "crush"),
+    makeTrack("Girlboss", "girlboss"),
+    makeTrack("Sushi", "sushi"),
+    makeTrack("What I Want", "whatiwant")
 ];
 
 const titleEl = document.getElementById("trackTitle");
@@ -40,7 +45,7 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
         }
 
         loadingPromise = visualizerBridge
-            .setTrack({ src: track.src, title: track.title })
+            .setTrack({ src: track.src, title: track.title, subtitle: track.subtitle })
             .then(() => {
                 loadedTrackSrc = track.src;
             })

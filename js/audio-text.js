@@ -1,6 +1,7 @@
 import SRTLector from './srt-reader.js';
 
 const DEFAULT_TRACK = new URL('../audio/crush.mp3', import.meta.url).href;
+const DEFAULT_SUBTITLE = new URL('../audio/crush.srt', import.meta.url).href;
 const BRIDGE_EVENT_ENDED = 'visualizer:track-ended';
 
 let font;
@@ -16,6 +17,7 @@ let center = { x: 1, y: 1 };
 let diameter = 100;
 let vol = 0;
 let currentTrackSrc = DEFAULT_TRACK;
+let currentSubtitleSrc = DEFAULT_SUBTITLE;
 
 const bridgeCommandQueue = [];
 const audioVisualizerBridge = window.audioVisualizerBridge || {};
@@ -44,10 +46,13 @@ audioVisualizerBridge.pause = () => enqueueBridgeCommand('pause');
 window.audioVisualizerBridge = audioVisualizerBridge;
 
 const normalizeTrackSrc = (src) => {
-    if (!src) {
-        throw new Error('Ruta de pista inválida');
-    }
-    return new URL(src, window.location.href).href;
+    const target = src || DEFAULT_TRACK;
+    return new URL(target, window.location.href).href;
+};
+
+const normalizeSubtitleSrc = (src) => {
+    const target = src || DEFAULT_SUBTITLE;
+    return new URL(target, window.location.href).href;
 };
 
 const loadSoundAsync = (src) =>
@@ -72,7 +77,7 @@ const attachSubtitleReader = () => {
         audioSRTReader.destroy();
     }
 
-    audioSRTReader = new SRTLector(song, '../audio/crush.srt', {
+    audioSRTReader = new SRTLector(song, currentSubtitleSrc, {
         onSubtitleChange: (obj) => {
             if (song && song.isPlaying() && obj) {
                 currentsubtitle = String(obj.subtitle).toUpperCase();
@@ -114,11 +119,18 @@ const swapSong = (nextSong, nextSrc) => {
     currentsubtitle = '';
 };
 
-const setTrackSource = async (rawSrc) => {
-    const normalizedSrc = normalizeTrackSrc(rawSrc);
-    if (normalizedSrc === currentTrackSrc && song) {
+const setTrackSource = async ({ src, subtitle } = {}) => {
+    const normalizedSrc = normalizeTrackSrc(src);
+    const normalizedSubtitle = normalizeSubtitleSrc(subtitle);
+    const needsSwap = normalizedSrc !== currentTrackSrc || !song;
+
+    currentSubtitleSrc = normalizedSubtitle;
+
+    if (!needsSwap) {
+        attachSubtitleReader();
         return song;
     }
+
     const nextSong = await loadSoundAsync(normalizedSrc);
     swapSong(nextSong, normalizedSrc);
     return song;
@@ -127,7 +139,7 @@ const setTrackSource = async (rawSrc) => {
 const handleBridgeCommand = async ({ type, payload }) => {
     switch (type) {
         case 'setTrack':
-            await setTrackSource(payload?.src);
+            await setTrackSource(payload);
             break;
         case 'play':
             if (!song) {
