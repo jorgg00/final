@@ -43,6 +43,24 @@ const processBridgeCommand = (command) => {
 audioVisualizerBridge.setTrack = (payload) => enqueueBridgeCommand('setTrack', payload);
 audioVisualizerBridge.play = () => enqueueBridgeCommand('play');
 audioVisualizerBridge.pause = () => enqueueBridgeCommand('pause');
+audioVisualizerBridge.setVolume = (volume) => enqueueBridgeCommand('setVolume', { volume });
+audioVisualizerBridge.getCurrentTime = () => {
+    if (!song) return 0;
+    try {
+        return song.currentTime() || 0;
+    } catch {
+        return 0;
+    }
+};
+audioVisualizerBridge.getDuration = () => {
+    if (!song) return 0;
+    try {
+        return song.duration() || 0;
+    } catch {
+        return 0;
+    }
+};
+audioVisualizerBridge.setPosition = (time) => enqueueBridgeCommand('setPosition', { time });
 window.audioVisualizerBridge = audioVisualizerBridge;
 
 const normalizeTrackSrc = (src) => {
@@ -150,6 +168,17 @@ const handleBridgeCommand = async ({ type, payload }) => {
         case 'pause':
             if (song) {
                 song.pause();
+            }
+            break;
+        case 'setVolume':
+            if (song && typeof payload?.volume === 'number') {
+                const volume = Math.max(0, Math.min(1, payload.volume / 100));
+                song.setVolume(volume);
+            }
+            break;
+        case 'setPosition':
+            if (song && typeof payload?.time === 'number') {
+                song.jump(payload.time);
             }
             break;
         default:

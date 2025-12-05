@@ -34,6 +34,20 @@
                 &#9654;
             </button>
         </div>
+        <div class="audio-ui__progress-container">
+            <div class="audio-ui__progress-bar" id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="audio-ui__progress-fill" id="progressFill"></div>
+            </div>
+            <div class="audio-ui__time-display">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+        <div class="audio-ui__volume-container">
+            <label for="volumeControl" class="audio-ui__volume-label">Volumen</label>
+            <input type="range" id="volumeControl" class="audio-ui__volume-slider" min="0" max="100" value="100" aria-label="Control de volumen">
+            <span class="audio-ui__volume-value" id="volumeValue">100%</span>
+        </div>
         <p class="audio-ui__status" id="trackStatus" aria-live="polite"></p>
     </section>
 

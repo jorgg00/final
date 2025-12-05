@@ -18,6 +18,12 @@ const tracks = [
 const titleEl = document.getElementById("trackTitle");
 const statusEl = document.getElementById("trackStatus");
 const controlPanel = document.querySelector(".audio-ui__controls");
+const progressBar = document.getElementById("progressBar");
+const progressFill = document.getElementById("progressFill");
+const currentTimeEl = document.getElementById("currentTime");
+const durationEl = document.getElementById("duration");
+const volumeControl = document.getElementById("volumeControl");
+const volumeValue = document.getElementById("volumeValue");
 
 const visualizerBridge = window.audioVisualizerBridge;
 
