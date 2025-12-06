@@ -174,7 +174,6 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
     });
 
     window.addEventListener("visualizer:track-ended", () => {
-        stopProgressUpdates();
         loadTrack(currentIndex + 1, { autoplay: true });
     });
 
@@ -255,6 +254,23 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
             e.preventDefault();
             visualizerBridge.setPosition(newTime);
             updateProgress();
+        });
+    }
+
+    // Botón de regresar
+    const backButton = document.getElementById('backButton');
+    if (backButton) {
+        backButton.addEventListener('click', () => {
+            // Pausar el audio si está reproduciéndose
+            if (visualizerBridge.ready) {
+                visualizerBridge.pause().catch(() => {});
+            }
+            stopProgressUpdates();
+            
+            // Regresar a la pantalla de bienvenida
+            if (window.welcomeScreen && typeof window.welcomeScreen.goBack === 'function') {
+                window.welcomeScreen.goBack();
+            }
         });
     }
 

@@ -89,6 +89,31 @@ class WelcomeScreen {
         }, 300);
     }
 
+    // Método para regresar a la pantalla de bienvenida
+    goBack() {
+        if (this.isTransitioning) return;
+        
+        this.isTransitioning = true;
+
+        // Ocultar reproductor
+        this.audioUI.classList.remove('visible');
+
+        // Mostrar pantalla de bienvenida después de un breve delay
+        setTimeout(() => {
+            this.welcomeScreen.classList.remove('hidden');
+            this.isTransitioning = false;
+
+            // Re-habilitar el botón de iniciar
+            this.startButton.disabled = false;
+
+            // Enfocar el botón de iniciar para accesibilidad
+            this.startButton.focus();
+
+            // Dispatch evento personalizado para notificar que se regresó
+            window.dispatchEvent(new CustomEvent('welcome:returned'));
+        }, 300);
+    }
+
     // Método para reiniciar la pantalla de bienvenida (útil para testing)
     reset() {
         this.welcomeScreen.classList.remove('hidden');
@@ -101,11 +126,15 @@ class WelcomeScreen {
 }
 
 // Inicializar cuando el DOM esté listo
+let welcomeScreenInstance = null;
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        new WelcomeScreen();
+        welcomeScreenInstance = new WelcomeScreen();
+        window.welcomeScreen = welcomeScreenInstance;
     });
 } else {
-    new WelcomeScreen();
+    welcomeScreenInstance = new WelcomeScreen();
+    window.welcomeScreen = welcomeScreenInstance;
 }
 
