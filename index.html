@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Final </title>
+    <link rel="stylesheet" href="./css/welcome.css">
     <link rel="stylesheet" href="./css/audio-controls.css">
     <style>
         body{
@@ -15,6 +16,21 @@
     </style>
 </head>
 <body>
+    <!-- Pantalla de bienvenida -->
+    <section class="welcome-screen" id="welcomeScreen" aria-label="Pantalla de bienvenida">
+        <div class="welcome-screen__container">
+            <div class="welcome-screen__preloader" aria-hidden="true"></div>
+            <h1 class="welcome-screen__title">Jorgg Audio Visualizer</h1>
+            <p class="welcome-screen__message">
+               Bienvenidx!!,   este es un visualizador de audio hecho por Jorgg 👨🏻‍🦯‍➡️ , para ver diferentes efectos visuales en diferentes pistas de audio. ¡Disfruta! 💿
+            </p>
+            <button class="welcome-screen__button" id="startButton" aria-label="Iniciar experiencia">
+                <span>Iniciar</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Reproductor de audio (oculto inicialmente) -->
     <section class="audio-ui" aria-label="Controles de audio">
         <p class="audio-ui__eyebrow">Playlist</p>
         <h1 class="audio-ui__title" id="trackTitle" aria-live="polite">
@@ -53,6 +69,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/addons/p5.sound.min.js"></script>
+    <script src="./js/welcome.js"></script>
     <script src= "./js/audio-text.js" type="module"></script>
     <script src="./js/audio-controls.js" type="module"></script>
 </body>
