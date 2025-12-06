@@ -38,7 +38,7 @@
 
 .audio-ui__btn {
     border: 1px solid rgba(255, 255, 255, 0.35);
-    background: transparent;
+    background:  #cedf10, #93df10
     color: inherit;
     font-size: 0.95rem;
     padding: 0.75rem;
@@ -49,9 +49,9 @@
 
 .audio-ui__btn:hover,
 .audio-ui__btn:focus-visible {
-    border-color: #ffb703;
+    border-color: #2655ca;
     background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-2pxs;
 }
 
 .audio-ui__btn:active {
@@ -96,7 +96,7 @@
 .audio-ui__progress-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ffb703, #fb8500);
+    background: linear-gradient(90deg, #cedf10, #93df10);
     border-radius: 999px;
     transition: width 0.1s linear;
 }
@@ -138,7 +138,7 @@
     appearance: none;
     width: 14px;
     height: 14px;
-    background: #ffb703;
+    background: #d9ff03;
     border-radius: 50%;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -151,7 +151,7 @@
 .audio-ui__volume-slider::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: #ffb703;
+    background: #63fa05;
     border: none;
     border-radius: 50%;
     cursor: pointer;

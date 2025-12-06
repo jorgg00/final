@@ -33,6 +33,45 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
     let currentIndex = 0;
     let loadedTrackSrc = null;
     let loadingPromise = null;
+    let progressUpdateInterval = null;
+
+    const formatTime = (seconds) => {
+        if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    const updateProgress = () => {
+        if (!visualizerBridge.ready) return;
+        
+        const currentTime = visualizerBridge.getCurrentTime();
+        const duration = visualizerBridge.getDuration();
+        
+        if (duration > 0) {
+            const progress = (currentTime / duration) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressBar.setAttribute("aria-valuenow", progress);
+            currentTimeEl.textContent = formatTime(currentTime);
+            durationEl.textContent = formatTime(duration);
+        } else {
+            progressFill.style.width = "0%";
+            currentTimeEl.textContent = "0:00";
+            durationEl.textContent = "0:00";
+        }
+    };
+
+    const startProgressUpdates = () => {
+        if (progressUpdateInterval) return;
+        progressUpdateInterval = setInterval(updateProgress, 100);
+    };
+
+    const stopProgressUpdates = () => {
+        if (progressUpdateInterval) {
+            clearInterval(progressUpdateInterval);
+            progressUpdateInterval = null;
+        }
+    };
 
     const setStatus = (message) => {
         statusEl.textContent = message;
@@ -74,10 +113,12 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
             if (autoplay) {
                 await visualizerBridge.play();
                 setStatus("Reproduciendo");
+                startProgressUpdates();
                 return;
             }
 
             setStatus("Lista para reproducir");
+            updateProgress();
         } catch (error) {
             setStatus(`Error al cargar: ${error.message}`);
         }
@@ -89,6 +130,7 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
             await updateTrackSource(tracks[currentIndex]);
             await visualizerBridge.play();
             setStatus("Reproduciendo");
+            startProgressUpdates();
         } catch (error) {
             setStatus(`Error al reproducir: ${error.message}`);
         }
@@ -98,6 +140,7 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
         try {
             await visualizerBridge.pause();
             setStatus("Pausada");
+            stopProgressUpdates();
         } catch (error) {
             setStatus(`Error al pausar: ${error.message}`);
         }
@@ -131,8 +174,89 @@ if (!titleEl || !statusEl || !controlPanel || !visualizerBridge) {
     });
 
     window.addEventListener("visualizer:track-ended", () => {
+        stopProgressUpdates();
         loadTrack(currentIndex + 1, { autoplay: true });
     });
+
+    // Inicializar volumen cuando el bridge esté listo
+    const initVolume = () => {
+        if (volumeControl && volumeValue && visualizerBridge.ready) {
+            const volume = parseInt(volumeControl.value, 10);
+            visualizerBridge.setVolume(volume);
+        }
+    };
+
+    // Verificar periódicamente si el bridge está listo
+    const checkBridgeReady = setInterval(() => {
+        if (visualizerBridge.ready) {
+            initVolume();
+            clearInterval(checkBridgeReady);
+        }
+    }, 100);
+
+    // Control de volumen
+    if (volumeControl && volumeValue) {
+        // Inicializar volumen al 100%
+        const initialVolume = 100;
+        volumeControl.value = initialVolume;
+        volumeValue.textContent = `${initialVolume}%`;
+        if (visualizerBridge.ready) {
+            visualizerBridge.setVolume(initialVolume);
+        }
+        
+        volumeControl.addEventListener("input", (e) => {
+            const volume = parseInt(e.target.value, 10);
+            volumeValue.textContent = `${volume}%`;
+            if (visualizerBridge.ready) {
+                visualizerBridge.setVolume(volume);
+            }
+        });
+    }
+
+    // Barra de progreso - click para saltar
+    if (progressBar) {
+        progressBar.addEventListener("click", (e) => {
+            if (!visualizerBridge.ready) return;
+            
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const duration = visualizerBridge.getDuration();
+            
+            if (duration > 0) {
+                const newTime = percentage * duration;
+                visualizerBridge.setPosition(newTime);
+                updateProgress();
+            }
+        });
+
+        // Soporte para teclado (accesibilidad)
+        progressBar.addEventListener("keydown", (e) => {
+            if (!visualizerBridge.ready) return;
+            
+            const duration = visualizerBridge.getDuration();
+            if (duration <= 0) return;
+            
+            let newTime = visualizerBridge.getCurrentTime();
+            const step = 5; // 5 segundos
+            
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                newTime = Math.max(0, newTime - step);
+            } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                newTime = Math.min(duration, newTime + step);
+            } else if (e.key === "Home") {
+                newTime = 0;
+            } else if (e.key === "End") {
+                newTime = duration;
+            } else {
+                return;
+            }
+            
+            e.preventDefault();
+            visualizerBridge.setPosition(newTime);
+            updateProgress();
+        });
+    }
 
     loadTrack(currentIndex);
 }
