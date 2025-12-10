@@ -193,7 +193,7 @@ const flushBridgeQueue = () => {
 };
 
 window.preload = () => {
-    font = loadFont('./css/rubik.ttf');
+    font = loadFont('https://jorgg00.github.io/final/css/rubik.ttf');
     song = loadSound(DEFAULT_TRACK);
 };
 
